@@ -32,7 +32,7 @@ const signupUser = async (req, res) => {
     }
 
     // 4. bcrypt password & store user in DB
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 10); // value, salt
     const user = await User.create({ email, password: hash });
 
     const token = createToken(user._id);
@@ -56,6 +56,7 @@ const loginUser = async (req, res) => {
 
     // match the password with bcrypt (if not a match through error)
     let match = null; // should not be 'const' => reassigned
+    
     if (user) {
       match = await bcrypt.compare(password, user.password);
     }
