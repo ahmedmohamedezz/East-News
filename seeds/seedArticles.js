@@ -8,40 +8,8 @@ const getAPINews = require("../newsAPI/newsAPI");
 - required: title, source, author, url, publishedAt, language, category
 - not-required: country, imageURL, content, description
 */
-let attrIds = {};
-
-async function getCategoryId(name) {
-  // to reduce the number of API calls, using attrIds for memoization
-  if (attrIds.name === null) {
-    console.log(`fetching id of ${name}`);
-    attrIds.name = await Category.findOne({ name })._id;
-  }
-
-  return attrIds.category;
-}
-
-async function getCountryId(code) {
-  // to reduce the number of API calls, using attrIds for memoization
-  if (attrIds.code === null) {
-    console.log(`fetching id of ${code}`);
-    attrIds.code = await Country.findOne({ code })._id;
-  }
-
-  return attrIds.code;
-}
-
-async function getLanguageId(code) {
-  // to reduce the number of API calls, using attrIds for memoization
-  if (attrIds.code === null) {
-    console.log(`fetching id of ${code}`);
-    attrIds.code = await Language.findOne({ code })._id;
-  }
-
-  return attrIds.code;
-}
 
 async function seedArticles() {
-  let result = [];
   try {
     // get all kinds of news, add or update the DB
     const allowedCategories = Category.getAllowedCategories();
@@ -50,11 +18,11 @@ async function seedArticles() {
 
     for (const category of allowedCategories) {
       for (const country of allowedCountries) {
-        for (const langauge of allowedLanguages) {
+        for (const language of allowedLanguages) {
           let requestedAttrs = {
             category,
             country,
-            langauge,
+            language,
           };
 
           let articles = await getAPINews(requestedAttrs);
@@ -63,44 +31,53 @@ async function seedArticles() {
             // api returns: title, source, author, url, publishedAt, imageURL, content, description
             // still missing: countryId, languageId, categoryId
 
-            let artExists = await Article.findOne({
-              title: curArticle.title,
-              publishedAt: curArticle.publishedAt,
-            });
+            const title = curArticle.title;
+            const publishedAt = curArticle.publishedAt;
+
+            let artExists = await Article.findOne({ title, publishedAt });
+
+            // add missing attrs
+            const curCategoryId = await Category.findOne({ name: category });
+
+            const curCountryId = await Country.findOne({ code: country });
+            const curLanguageId = await Language.findOne({ code: language });
+
+            curArticle.languageId = curLanguageId._id;
+            curArticle.categoryIds = [curCategoryId._id];
+            curArticle.countryId = curCountryId._id;
 
             if (artExists) {
-              console.log("article exists");
+              // one article can have more than 1 category
+              if (!artExists.categoryIds.includes(curCategoryId._id)) {
+                try {
+                  await Article.updateOne(
+                    { title, publishedAt },
+                    { $push: { categoryIds: curCategoryId._id } }
+                  );
+                } catch (error) {
+                  console.log("Can't update article categories");
+                  console.log(error.message);
+                }
+              }
+
+              // don't add it again => duplicates
               continue;
             }
 
-            // add missing attrs
-            let lanId = await Language.findOne({ code: langauge });
-            let catId = await Category.findOne({ name: category });
-            let conId = await Country.findOne({ code: country });
-
-            if (!lanId || !catId || !conId) {
-              console.log(langauge, lanId._id);
-              console.log(category, catId._id);
-              console.log(country, conId._id);
-              return;
+            try {
+              await Article.create(curArticle);
+            } catch (error) {
+              console.log("Error creating article");
+              console.log(error.message);
             }
-
-            curArticle.langaugeId = lanId._id;
-            curArticle.categoryId = catId._id;
-            curArticle.countryId = conId._id;
-
-            // result.push(curArticle);
-            await Article.create(curArticle);
           }
         }
       }
     }
-    // console.log(result.length);
-    // await Article.insertMany(result);
 
     console.log("\tArticles seeded successfully");
   } catch (error) {
-    console.error("Error seeding articles:", error);
+    console.error("Error seeding articles:", error.message);
   }
 }
 

@@ -28,11 +28,13 @@ const articleSchema = new Schema({
     ref: "Language",
     required: true,
   },
-  categoryId: {
-    type: Schema.Types.ObjectId,
-    ref: "Category",
-    required: true,
-  },
+  categoryIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+  ],
   countryId: {
     type: Schema.Types.ObjectId,
     ref: "Country",

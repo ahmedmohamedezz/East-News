@@ -2,6 +2,7 @@ require("dotenv").config(); // to access process.env object
 const express = require("express");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/user");
+const newsRoutes = require("./routes/news");
 // const crypto = require("crypto");
 
 async function main() {
@@ -17,6 +18,7 @@ async function main() {
 
   // routers
   app.use("/user", userRoutes);
+  app.use("/news", newsRoutes);
 
   app.get("/", (req, res) => {
     res.status(200).json({ msg: "Success" });

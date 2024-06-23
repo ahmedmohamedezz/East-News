@@ -14,9 +14,9 @@ async function seedDatabase() {
     console.log("Start seeding database");
 
     // run the seed functions
-    // await seedCategories();
-    // await seedLanguages();
-    // await seedCountries();
+    await seedCategories();
+    await seedLanguages();
+    await seedCountries();
 
     // must be the last as it depends on previous seeds
     await seedArticles();
