@@ -7,6 +7,13 @@ const getNews = async (req, res) => {
   // for filtering upon language, category, country
   const { country, category, language } = req.body;
 
+  if (!country && !category && !language) {
+    return res
+      .status(400)
+      .json({
+        message: "atleast 1 field is required [category, country, language]",
+      });
+  }
   try {
     let requestedAttrs = {};
 
