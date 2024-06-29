@@ -12,19 +12,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@mozilla/readability": "^0.5.0",
+    "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "jsdom": "^24.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.3.2",
     "newsapi": "^2.4.1",
     "nodemon": "^3.1.0",
+    "smmry": "^1.0.2",
     "validator": "^13.11.0"
-  },
-  "devDependencies": {
-    "@mozilla/readability": "^0.5.0",
-    "axios": "^1.7.2",
-    "crypto": "^1.0.1",
-    "jsdom": "^24.1.0"
   }
 }

@@ -2,17 +2,18 @@ const Article = require("../models/articleModel");
 const Country = require("../models/countryModel");
 const Language = require("../models/languageModel");
 const Category = require("../models/categoryModel");
+const axios = require("axios");
+const smmry = require("smmry")({ SM_API_KEY: "3591563BA7" });
+const SMMRY_API_URL = "https://api.smmry.com/";
 
 const getNews = async (req, res) => {
   // for filtering upon language, category, country
   const { country, category, language } = req.body;
 
   if (!country && !category && !language) {
-    return res
-      .status(400)
-      .json({
-        message: "atleast 1 field is required [category, country, language]",
-      });
+    return res.status(400).json({
+      message: "atleast 1 field is required [category, country, language]",
+    });
   }
   try {
     let requestedAttrs = {};
@@ -64,4 +65,25 @@ const getNews = async (req, res) => {
   }
 };
 
-module.exports = getNews;
+const summarize = async (req, res) => {
+  const { text } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ message: "article content is required" });
+  }
+
+  smmry
+    .summarizeText(text)
+    .then((data) => {
+      return res.status(200).json({ summary: data });
+    })
+    .catch((err) => {
+      // console.error(err);
+      return res.status(500).json({ err });
+    });
+};
+
+module.exports = {
+  getNews,
+  summarize,
+};

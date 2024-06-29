@@ -1,6 +1,6 @@
 const express = require("express");
 const requireAuth = require("../middleware/requireAuth");
-const getNews = require("../controllers/newsController");
+const { getNews, summarize } = require("../controllers/newsController");
 
 const router = express.Router();
 
@@ -9,5 +9,7 @@ router.use(requireAuth);
 
 // 'news/getNews' + req.body
 router.get("/getNews", getNews);
+
+router.post("/summarize", summarize);
 
 module.exports = router;
