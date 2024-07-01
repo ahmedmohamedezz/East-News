@@ -3,6 +3,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/user");
 const newsRoutes = require("./routes/news");
+const commentRoutes = require("./routes/comment");
+const passport = require("passport");
+const session = require("express-session");
+const path = require("path");
+
 // const crypto = require("crypto");
 
 async function main() {
@@ -10,19 +15,35 @@ async function main() {
   // const secret = crypto.randomBytes(64).toString("hex");
   // console.log(secret);
 
+  
   // express app
   const app = express();
-
+  
   // middleware
   app.use(express.json()); // to use request payload
 
+  app.use (express.static (path.join (__dirname, 'views')));
+  
   // routers
-  app.use("/user", userRoutes);
   app.use("/news", newsRoutes);
+  app.use("/user", userRoutes);
+  app.use("/comment", commentRoutes);
 
-  app.get("/", (req, res) => {
-    res.status(200).json({ msg: "Success" });
+  app.get('/', (req, res) => {
+    res.sendFile('login.html');
   });
+
+  //auth session
+
+  app.use(session({
+    secret: 'mysecret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+  }));
+
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   try {
     await mongoose.connect(process.env.MONGO_URI);

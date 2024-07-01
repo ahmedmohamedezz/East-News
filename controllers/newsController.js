@@ -2,6 +2,7 @@ const Article = require("../models/articleModel");
 const Country = require("../models/countryModel");
 const Language = require("../models/languageModel");
 const Category = require("../models/categoryModel");
+const Comment = require("../models/commentsModel");
 const axios = require("axios");
 const smmry = require("smmry")({ SM_API_KEY: "3591563BA7" });
 const SMMRY_API_URL = "https://api.smmry.com/";

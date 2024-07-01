@@ -1,0 +1,63 @@
+input_message = """
+What do You Want To Do ?
+"s" => Show All Skills 
+"a" => Add New skill 
+"u" => Update Skill 
+"d" => Delete Skills Progress
+"q" => Quit The App
+"""
+
+# print(User_input)q
+
+commend_list = ["s","a","u","d","q"]
+
+def Show_skill() :
+
+    print("Show_skill")
+
+def Add_skill():
+
+    print("Add skill")
+
+def Update_Skill():
+
+    print("Update Skill")
+
+def Delete_skill():
+
+    print("Delete skill")
+
+def quit():
+    
+    print("quit")
+    
+User_input =input(input_message).strip().lower()
+
+if User_input in commend_list :
+
+    print(f"Commends Found : {User_input}")
+
+    if User_input == "s":
+
+        print(Show_skill() )
+        
+
+    elif User_input == "a":
+
+        print(Add_skill())
+
+    elif User_input == "u":
+
+        print(Update_Skill())
+
+    elif User_input == "d":
+
+        print(Delete_skill())
+        
+    else : 
+        print(quit())
+
+
+else:
+
+    print("commend is not NotFound 'Error!'")

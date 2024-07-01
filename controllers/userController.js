@@ -2,6 +2,9 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
+const passport = require("passport");
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+require("dotenv").config();
 
 const createToken = (_id, expiresIn = "3d") => {
   // return jwt.sign({ _id }, process.env.JWT_SECRET, { expiresIn: "3d" });
@@ -92,7 +95,42 @@ const logoutUser = (req, res) => {
   const { token } = req.body;
   const { _id } = jwt.verify(token, process.env.JWT_SECRET);
   createToken(_id, "1s");
+  req.session.destroy ();
   res.status(200).json("Loggedout successfully");
+};
+//google auth
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:5000/user/auth/google/callback",
+    passReqToCallback: true
+  },
+  function(request,accessToken, refreshToken, profile, done) {
+    done(null,profile)
+  }
+));
+
+passport.serializeUser((user, done) => {
+    done(null, user)
+});
+
+passport.deserializeUser((user, done) => {
+    done(null, user)
+});
+
+
+const googleauth = (req, res) => {
+  passport.authenticate('google', { scope: ['email', 'profile'] })
+  res.status(200).json("successfully");
+};
+
+const getgoogleresponse = (req, res) => {
+  passport.authenticate('google', { failureRedirect: '/login' }),
+    function (req, res) {
+      // Successful authentication, redirect home.
+      res.redirect('/');
+    }
 };
 
 module.exports = {
@@ -100,4 +138,6 @@ module.exports = {
   signupUser,
   logoutUser,
   testToken,
+  googleauth,
+  getgoogleresponse,
 };

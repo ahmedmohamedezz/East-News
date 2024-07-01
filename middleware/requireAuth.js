@@ -25,4 +25,9 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
+//test if logged in successfully with google
+//function isLoggedIn(req, res, next) {
+//  req.user ? next() : res.sendStatus(401);
+//}
+
 module.exports = requireAuth;
