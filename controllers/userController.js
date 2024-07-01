@@ -2,12 +2,12 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
-const passport = require("passport");
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+// const passport = require("passport");
+// const GoogleStrategy = require("passport-google-oauth20").Strategy;
 require("dotenv").config();
 const { PythonShell } = require("python-shell");
-const path = require('path');
-const { exec } = require('child_process');
+const path = require("path");
+const { exec } = require("child_process");
 
 const createToken = (_id, expiresIn = "3d") => {
   // return jwt.sign({ _id }, process.env.JWT_SECRET, { expiresIn: "3d" });
@@ -62,7 +62,7 @@ const loginUser = async (req, res) => {
 
     // match the password with bcrypt (if not a match through error)
     let match = null; // should not be 'const' => reassigned
-    
+
     if (user) {
       match = await bcrypt.compare(password, user.password);
     }
@@ -72,12 +72,13 @@ const loginUser = async (req, res) => {
 
     const token = createToken(user._id);
 
-    res.status(200).json({ email, token });
+    res.status(200).json({ user, token });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
+/*
 // TODO : logout functinality
 const testToken = async (req, res) => {
   const { token } = req.body;
@@ -98,106 +99,116 @@ const logoutUser = (req, res) => {
   const { token } = req.body;
   const { _id } = jwt.verify(token, process.env.JWT_SECRET);
   createToken(_id, "1s");
-  req.session.destroy ();
+  req.session.destroy();
   res.status(200).json("Loggedout successfully");
 };
+
 //google auth
 
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:5000/user/auth/google/callback",
-    passReqToCallback: true
-  },
-  function(request,accessToken, refreshToken, profile, done) {
-    done(null,profile)
-  }
-));
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://localhost:5000/user/auth/google/callback",
+      passReqToCallback: true,
+    },
+    function (request, accessToken, refreshToken, profile, done) {
+      done(null, profile);
+    }
+  )
+);
 
 passport.serializeUser((user, done) => {
-    done(null, user)
+  done(null, user);
 });
 
 passport.deserializeUser((user, done) => {
-    done(null, user)
+  done(null, user);
 });
 
-
 const googleauth = (req, res) => {
-  passport.authenticate('google', { scope: ['email', 'profile'] })
+  passport.authenticate("google", { scope: ["email", "profile"] });
   res.status(200).json("successfully");
 };
 
 const getgoogleresponse = (req, res) => {
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate("google", { failureRedirect: "/login" }),
     function (req, res) {
       // Successful authentication, redirect home.
-      res.redirect('/');
-    }
+      res.redirect("/");
+    };
 };
+*/
 
 const predict = async (req, res) => {
   try {
     const comment = req.body.comment;
-   
+
     if (!comment) {
       return res.status(400).send("Comment is required");
     }
 
-    const pythonScriptPath = path.join(__dirname, '../python/predict.py');
+    const pythonScriptPath = path.join(__dirname, "../python/predict.py");
 
     // Execute the Python script
-    const pythonProcess = exec(`python ${pythonScriptPath}`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`exec error: ${error}`);
-        return res.status(500).json({ error: 'Error in prediction' });
-      }
-
-      try {
-        // Extract output and send message
-        const message = stdout;
-
-        // Extract the number from the message
-        const match = message.match(/\d+/);
-       
-        if (match) {
-          const predictedLabel = parseInt(match[0], 10);
-          let classification;
-
-          // Classify based on the predicted label
-          if (predictedLabel === 0) {
-            classification = "This comment is classified as hate speech.";
-          } else if (predictedLabel === 1) {
-            classification = "This comment is classified as offensive language.";
-          } else {
-            classification = "This comment is classified as neither offensive nor non-offensive.";
-          }
-
-          res.json({ classification });
-        } else {
-          res.status(500).json({ error: 'No valid prediction found in the message.' });
+    const pythonProcess = exec(
+      `python ${pythonScriptPath}`,
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          return res.status(500).json({ error: "Error in prediction" });
         }
-      } catch (parseError) {
-        console.error(`parse error: ${parseError}`);
-        res.status(500).json({ error: 'Error parsing prediction result' });
+
+        try {
+          // Extract output and send message
+          const message = stdout;
+
+          // Extract the number from the message
+          const match = message.match(/\d+/);
+
+          if (match) {
+            const predictedLabel = parseInt(match[0], 10);
+            let classification;
+
+            // Classify based on the predicted label
+            if (predictedLabel === 0) {
+              classification = "This comment is classified as hate speech.";
+            } else if (predictedLabel === 1) {
+              classification =
+                "This comment is classified as offensive language.";
+            } else {
+              classification =
+                "This comment is classified as neither offensive nor non-offensive.";
+            }
+
+            res.json({ classification });
+          } else {
+            res
+              .status(500)
+              .json({ error: "No valid prediction found in the message." });
+          }
+        } catch (parseError) {
+          console.error(`parse error: ${parseError}`);
+          res.status(500).json({ error: "Error parsing prediction result" });
+        }
       }
-    });
+    );
 
     pythonProcess.stdin.write(JSON.stringify(comment));
     pythonProcess.stdin.end();
-
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 module.exports = {
   loginUser,
   signupUser,
-  logoutUser,
-  testToken,
-  googleauth,
-  getgoogleresponse,
-  predict
+  // logoutUser,
+  // testToken,
+  // googleauth,
+  // getgoogleresponse,
+  predict,
 };

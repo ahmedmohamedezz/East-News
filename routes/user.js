@@ -1,7 +1,6 @@
 const express = require("express");
-const passport = require("passport");
+// const passport = require("passport");
 const requireAuth = require("../middleware/requireAuth");
-//const { predict } = require("../controllers/userController");
 // controller functions
 const {
   loginUser,
@@ -12,9 +11,10 @@ const {
   getgoogleresponse,
   predict,
 } = require("../controllers/userController");
-const { use } = require("passport");
+// const { use } = require("passport");
 
 const router = express.Router();
+router.use(requireAuth);
 
 // login route
 router.post("/login", loginUser);
@@ -23,17 +23,17 @@ router.post("/login", loginUser);
 router.post("/signup", signupUser);
 
 // logout route
-router.post("/logout", logoutUser);
+// router.post("/logout", logoutUser);
 
 //auth with google
 
-router.get('/login/google', googleauth);
+// router.get("/login/google", googleauth);
 
-router.get('/signup/google',googleauth);
-  
-router.get('/auth/google/callback', getgoogleresponse);
+// router.get("/signup/google", googleauth);
+
+// router.get("/auth/google/callback", getgoogleresponse);
 
 // prediction route
-router.post("/predict", predict ) ;
+router.post("/predict", predict);
 
 module.exports = router;

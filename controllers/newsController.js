@@ -2,10 +2,15 @@ const Article = require("../models/articleModel");
 const Country = require("../models/countryModel");
 const Language = require("../models/languageModel");
 const Category = require("../models/categoryModel");
-const Comment = require("../models/commentsModel");
-const axios = require("axios");
-const smmry = require("smmry")({ SM_API_KEY: "3591563BA7" });
-const SMMRY_API_URL = "https://api.smmry.com/";
+const User = require("../models/userModel");
+const Saved = require("../models/savedModel");
+
+const mongoose = require("mongoose");
+
+const smmry = require("smmry")({
+  SM_API_KEY: process.env.SM_API_KEY,
+  SM_LENGTH: 10,
+});
 
 const getNews = async (req, res) => {
   // for filtering upon language, category, country
@@ -76,7 +81,7 @@ const summarize = async (req, res) => {
   smmry
     .summarizeText(text)
     .then((data) => {
-      return res.status(200).json({ summary: data });
+      return res.status(200).json({ summary: data.sm_api_content });
     })
     .catch((err) => {
       // console.error(err);
@@ -84,7 +89,152 @@ const summarize = async (req, res) => {
     });
 };
 
+// check that data exists, and it's valid
+const validateRequestData = (req, res) => {
+  const { userId, articleId } = req.body;
+
+  // make sure data is sent
+  if (!userId || !articleId) {
+    return res
+      .status(400)
+      .json({ message: "make sure to send the required data" });
+  }
+
+  // validate ids
+  if (
+    !mongoose.Types.ObjectId.isValid(userId) ||
+    !mongoose.Types.ObjectId.isValid(articleId)
+  ) {
+    return res.status(400).json({ message: "Ids are not valid" });
+  }
+
+  return null;
+};
+
+// check that there are data object with corresponding IDs
+const userAndArticleExists = async (req, res) => {
+  const { userId, articleId } = req.body;
+  const user = await User.findOne({ _id: userId });
+  const article = await Article.findOne({ _id: articleId });
+
+  if (!user) {
+    return res.status(400).json({ message: "No user with such id" });
+  }
+
+  if (!article) {
+    return res.status(400).json({ message: "No article with such id" });
+  }
+
+  return null;
+};
+
+const articleIsSaved = async (userId, articleId) => {
+  const articleSaved = await Saved.findOne({ userId, articleId });
+
+  if (articleSaved) {
+    return true;
+  }
+
+  return false;
+};
+
+const save = async (req, res) => {
+  const { userId, articleId } = req.body;
+
+  try {
+    // ids are sent, and ids are valid
+    let dataIsInvalid = validateRequestData(req, res);
+
+    if (dataIsInvalid) {
+      return dataIsInvalid;
+    }
+
+    // there are objects with corresponding ids
+    dataIsInvalid = await userAndArticleExists(req, res);
+
+    if (dataIsInvalid) {
+      return dataIsInvalid;
+    }
+
+    // article is not saved before
+    const articleSaved = await articleIsSaved(userId, articleId);
+    if (articleSaved) {
+      return res.status(400).json({ message: "Article is already saved" });
+    }
+
+    // save article
+    await Saved.create({ userId, articleId });
+    return res.status(200).json({ message: "article is saved successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const unsave = async (req, res) => {
+  const { userId, articleId } = req.body;
+
+  try {
+    // ids are sent, and ids are valid
+    let dataIsInvalid = validateRequestData(req, res);
+
+    if (dataIsInvalid) {
+      return dataIsInvalid;
+    }
+
+    // there are objects with corresponding ids
+    dataIsInvalid = await userAndArticleExists(req, res);
+
+    if (dataIsInvalid) {
+      return dataIsInvalid;
+    }
+
+    // article is saved before
+    const articleSaved = await articleIsSaved(userId, articleId);
+
+    if (!articleSaved) {
+      return res.status(400).json({ message: "No such save article" });
+    }
+
+    // save article
+    await Saved.deleteOne({ userId, articleId });
+    return res.status(200).json({ message: "article is unsaved successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const getSavedArticles = async (req, res) => {
+  const { userId } = req.body;
+
+  // make sure userId is sent in the request
+  if (!userId) {
+    return res.status(400).json({ message: "User id is not provided" });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "User id is not valid" });
+  }
+
+  try {
+    // get all article saved by this user
+    const savedArticles = await Saved.find({ userId });
+    let articles = [];
+
+    for (article of savedArticles) {
+      const curArticle = await Article.findOne({ _id: article.articleId });
+      articles.push(curArticle);
+    }
+
+    return res.status(200).json({ articles });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getNews,
   summarize,
+  save,
+  unsave,
+  getSavedArticles,
 };

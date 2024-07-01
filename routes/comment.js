@@ -10,7 +10,7 @@ const {
 
 //authorized features
 const router = express.Router();
-//router.use(requireAuth);
+router.use(requireAuth);
 
 router.get('/getcomment', getcomment);
 

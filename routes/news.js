@@ -1,6 +1,12 @@
 const express = require("express");
 const requireAuth = require("../middleware/requireAuth");
-const { getNews, summarize } = require("../controllers/newsController");
+const {
+  getNews,
+  summarize,
+  save,
+  unsave,
+  getSavedArticles,
+} = require("../controllers/newsController");
 
 const router = express.Router();
 
@@ -11,5 +17,11 @@ router.use(requireAuth);
 router.get("/getNews", getNews);
 
 router.post("/summarize", summarize);
+
+router.post("/save", save);
+
+router.post("/unsave", unsave);
+
+router.get("/getSaved", getSavedArticles);
 
 module.exports = router;
