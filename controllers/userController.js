@@ -2,8 +2,8 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
-// const passport = require("passport");
-// const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 require("dotenv").config();
 const { PythonShell } = require("python-shell");
 const path = require("path");
@@ -43,7 +43,7 @@ const signupUser = async (req, res) => {
 
     const token = createToken(user._id);
 
-    res.status(200).json({ email, token });
+    res.status(200).json({ user, token });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -78,7 +78,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-/*
+
 // TODO : logout functinality
 const testToken = async (req, res) => {
   const { token } = req.body;
@@ -139,7 +139,7 @@ const getgoogleresponse = (req, res) => {
       res.redirect("/");
     };
 };
-*/
+
 
 const predict = async (req, res) => {
   try {
@@ -206,9 +206,9 @@ const predict = async (req, res) => {
 module.exports = {
   loginUser,
   signupUser,
-  // logoutUser,
-  // testToken,
-  // googleauth,
-  // getgoogleresponse,
+  logoutUser,
+  testToken,
+  googleauth,
+  getgoogleresponse,
   predict,
 };
