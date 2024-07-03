@@ -15,7 +15,7 @@ const createToken = (_id, expiresIn = "3d") => {
 };
 
 const signupUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password,userName } = req.body;
   try {
     // 1. check email & password != null
     if (!email || !password) {
@@ -39,7 +39,7 @@ const signupUser = async (req, res) => {
 
     // 4. bcrypt password & store user in DB
     const hash = await bcrypt.hash(password, 10); // value, salt
-    const user = await User.create({ email, password: hash });
+    const user = await User.create({ email, password: hash,userName });
 
     const token = createToken(user._id);
 
@@ -82,7 +82,7 @@ const loginUser = async (req, res) => {
 // TODO : logout functinality
 const testToken = async (req, res) => {
   const { token } = req.body;
-
+  console.log(token)
   try {
     const { _id } = jwt.verify(token, process.env.JWT_SECRET);
 

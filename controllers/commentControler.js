@@ -1,5 +1,7 @@
 const User = require("../models/userModel");
 const comments = require("../models/commentsModel");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 const { ObjectId } = require('mongodb');
 
 const getcomment = async (req, res) => {
@@ -7,7 +9,7 @@ const getcomment = async (req, res) => {
   const query = { articleID: articleID };
   try {
     const comment = await comments.find(query);
-    return res.status(200).json(comment);
+    return res.status(200).json({comment});
   }
   catch (error) {
     res.status(400).json({ error: error.message });
@@ -16,9 +18,16 @@ const getcomment = async (req, res) => {
 
 const addcomment = async (req, res) => {
   const publishDate = new Date();
-  const { text,authorID,articleID } = req.body;
+  const { authorization } = req.headers;
+  // authorization should be 'Bearer token'
+  const token = authorization.split(" ")[1];
+  const { text,articleID } = req.body;
   try {
-    const comment = await comments.create({ text, publishDate , authorID, articleID});
+    const { _id } = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ _id });
+    const userName = user.userName;
+    const authorID = _id;
+    const comment = await comments.create({ text, publishDate ,userName , authorID, articleID});
     res.status(200).json({comment});
   } catch (error) {
     res.status(400).json({ error: error.message });

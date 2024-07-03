@@ -16,6 +16,8 @@ const { use } = require("passport");
 const router = express.Router();
 // router.use(requireAuth);
 
+//router.get("/test", testToken);
+
 // login route
 router.post("/login", loginUser);
 
