@@ -15,20 +15,24 @@ const createToken = (_id, expiresIn = "3d") => {
 };
 
 const signupUser = async (req, res) => {
-  const { email, password,userName } = req.body;
+  const { email, password, userName } = req.body;
   try {
-    // 1. check email & password != null
-    if (!email || !password) {
-      throw new Error("All Entries must be filled");
+    // 1. check data is sent != null
+    if (!email || !password || !userName) {
+      throw new Error("Please provide all data");
     }
 
-    // 2. validate email & password
+    // 2. validate email, password, userName
     if (!validator.isEmail(email)) {
       throw new Error("Email is not valid");
     }
 
     if (!validator.isStrongPassword(password)) {
       throw new Error("Password is not strong enough");
+    }
+
+    if (userName === "") {
+      throw new Error("username can't be empty");
     }
 
     // 3. check that email is unique
@@ -39,7 +43,7 @@ const signupUser = async (req, res) => {
 
     // 4. bcrypt password & store user in DB
     const hash = await bcrypt.hash(password, 10); // value, salt
-    const user = await User.create({ email, password: hash,userName });
+    const user = await User.create({ email, password: hash, userName });
 
     const token = createToken(user._id);
 
@@ -78,11 +82,10 @@ const loginUser = async (req, res) => {
   }
 };
 
-
 // TODO : logout functinality
 const testToken = async (req, res) => {
   const { token } = req.body;
-  console.log(token)
+  console.log(token);
   try {
     const { _id } = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -139,7 +142,6 @@ const getgoogleresponse = (req, res) => {
       res.redirect("/");
     };
 };
-
 
 const predict = async (req, res) => {
   try {
