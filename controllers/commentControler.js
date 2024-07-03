@@ -35,10 +35,14 @@ const addcomment = async (req, res) => {
 };
 
 const editcomment = async (req, res) => {
-  const { text, authorID, commentID } = req.body;
+  const { authorization } = req.headers;
+  // authorization should be 'Bearer token'
+  const token = authorization.split(" ")[1];
+  const { text, commentID } = req.body;
   try {
-    const comment = await comments.find({ _id: commentID });
-    if (comment&&comment[0].authorID.equals(new ObjectId(authorID))) {
+    const { _id } = jwt.verify(token, process.env.JWT_SECRET);
+    const comment = await comments.findOne({ _id: commentID });
+    if (comment&&comment.authorID.equals(new ObjectId(_id))) {
       const filter = { _id: new ObjectId(commentID) };
       const updateDoc = {
         $set: {
@@ -56,11 +60,15 @@ const editcomment = async (req, res) => {
   }
 };
 
-const deletecomment = async(req, res) => {
-  const { authorID, commentID } = req.body;
+const deletecomment = async (req, res) => {
+  const { authorization } = req.headers;
+  // authorization should be 'Bearer token'
+  const token = authorization.split(" ")[1];
+  const {commentID } = req.body;
   try {
+    const { _id } = jwt.verify(token, process.env.JWT_SECRET);
     const comment = await comments.find({ _id: commentID });
-    if (comment&&comment[0].authorID.equals(new ObjectId(authorID))) {
+    if (comment&&comment[0].authorID.equals(new ObjectId(_id))) {
       const result = await comments.deleteOne(new ObjectId(commentID));
       res.status(200).json({result});
     }
