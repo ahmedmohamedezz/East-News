@@ -30,7 +30,7 @@ const like = async (req, res) => {
         if (arr.length > 0) {
             count = arr[0].count;   
         }
-            res.status(200).json({ "Likes_count": count, "status": "disliked" });
+            res.status(200).json({ "Likes_count": count, "status": "disliked",del });
         }
         else {
             const create = await Likes.create({ articleID, authorID: _id });
@@ -52,7 +52,7 @@ const like = async (req, res) => {
         if (arr.length > 0) {
             count = arr[0].count;   
         }
-            res.status(200).json({ "Likes_count": count, "status": "liked" });
+            res.status(200).json({ "Likes_count": count, "status": "liked",create });
         }
     } catch (error){
         res.status(400).json({ error: error.message });
@@ -74,13 +74,14 @@ const getlikes = async (req, res) => {
                 }   
             }
         ];
+        const all = await Likes.find({ articleID});
         const Like = mongoose.model("Likes");
         const arr = await Like.aggregate(pipeline).exec();
         let count = 0;
         if (arr.length > 0) {
             count = arr[0].count;   
         }
-        res.status(200).json({ "Likes_count": count});
+        res.status(200).json({ "Likes_count": count,all});
         
     } catch (error){
         res.status(400).json({ error: error.message });
