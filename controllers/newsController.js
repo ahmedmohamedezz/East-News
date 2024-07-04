@@ -7,10 +7,17 @@ const Saved = require("../models/savedModel");
 
 const mongoose = require("mongoose");
 
-const smmry = require("smmry")({
-  SM_API_KEY: process.env.SM_API_KEY,
-  SM_LENGTH: 10,
+const NLPCloudClient = require("nlpcloud");
+const client = new NLPCloudClient({
+  model: "bart-large-cnn",
+  token: "9d15a79b99ad0ecafff7aafe0c34a1c28378180f",
+  gpu: true,
 });
+
+// const smmry = require("smmry")({
+//   SM_API_KEY: process.env.SM_API_KEY,
+//   SM_LENGTH: 10,
+// });
 
 const getNews = async (req, res) => {
   // for filtering upon language, category, country
@@ -78,15 +85,30 @@ const summarize = async (req, res) => {
     return res.status(400).json({ message: "article content is required" });
   }
 
-  smmry
-    .summarizeText(text)
-    .then((data) => {
-      return res.status(200).json({ summary: data.sm_api_content });
+  client
+    .summarization({
+      text: text,
+      size: "large",
     })
-    .catch((err) => {
-      // console.error(err);
-      return res.status(500).json({ err });
+    .then(function (response) {
+      return res.status(200).json({ summary: response.data.summary_text });
+    })
+    .catch(function (err) {
+      return res
+        .status(500)
+        .json({ err: err.response.data.detail, status: err.response.status });
     });
+  // smmry
+  //   .summarizeText(text)
+  //   .then((data) => {
+  //     const sentences = text.split(".").length;
+  //     // return res.status(200).json({ summary: data.sm_api_content });
+  //     return res.status(200).json({ data, sentences });
+  //   })
+  //   .catch((err) => {
+  //     // console.error(err);
+  //     return res.status(500).json({ err });
+  //   });
 };
 
 // check that data exists, and it's valid
