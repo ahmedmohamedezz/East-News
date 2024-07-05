@@ -3,6 +3,9 @@ const comments = require("../models/commentsModel");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { ObjectId } = require("mongodb");
+const { PythonShell } = require("python-shell");
+const path = require("path");
+const { exec } = require("child_process");
 
 const getcomment = async (req, res) => {
   const { articleID } = req.body;
