@@ -5,6 +5,7 @@ const userRoutes = require("./routes/user");
 const newsRoutes = require("./routes/news");
 const commentRoutes = require("./routes/comment");
 const likeRoutes = require("./routes/like");
+const readRoutes = require("./routes/reader");
 const passport = require("passport");
 const session = require("express-session");
 const path = require("path");
@@ -30,6 +31,7 @@ async function main() {
   app.use("/user", userRoutes);
   app.use("/comment", commentRoutes);
   app.use("/like", likeRoutes);
+  app.use("/reader", readRoutes);
 
   app.get('/', (req, res) => {
     res.sendFile('login.html');
