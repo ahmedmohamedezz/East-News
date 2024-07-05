@@ -1,4 +1,4 @@
-const convertToMp3 = require("../seeds/readerSeed");
+const convertToMp3 = require("../helpers/readerHelper");
 const fs = require('fs');
 const path = require('path');
 
