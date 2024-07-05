@@ -127,6 +127,9 @@ const editcomment = async (req, res) => {
     const { _id } = jwt.verify(token, process.env.JWT_SECRET);
     const comment = await comments.findOne({ _id: commentID });
     if (comment && comment.authorID.equals(new ObjectId(_id))) {
+      const predictionResult = await predict({ comment: text })
+      if(predictionResult.classification == "This comment is classified as neither offensive nor hate."){
+        
       const filter = { _id: new ObjectId(commentID) };
       const updateDoc = {
         $set: {
@@ -135,6 +138,10 @@ const editcomment = async (req, res) => {
       };
       const result = await comments.updateOne(filter, updateDoc);
       res.status(200).json({ result });
+      }
+      else{
+        res.status(400).json(" this comment violated our policy!your comment cannot be added  ");
+      }
     } else {
       res.status(400).json("Can not edit");
     }
