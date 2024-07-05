@@ -1,4 +1,4 @@
-const say = require("say");
+const convertToMp3 = require("../seeds/readerSeed");
 const fs = require('fs');
 const path = require('path');
 
@@ -6,14 +6,6 @@ const parentDir = path.resolve(__dirname, '..');
 const filename = 'output.mp3';
 const filepath = path.join(parentDir, filename);
 
-const convertToMp3 = (text, filename, callback) => {
-    say.export(text, "", 0.75, filename, function(err) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, filename);
-    });
-};
 
 const readNews = (req, res) => {
     const text = req.body.text;
