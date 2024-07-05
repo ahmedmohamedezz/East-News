@@ -143,67 +143,6 @@ const getgoogleresponse = (req, res) => {
     };
 };
 
-const predict = async (req, res) => {
-  try {
-    const comment = req.body.comment;
-
-    if (!comment) {
-      return res.status(400).send("Comment is required");
-    }
-
-    const pythonScriptPath = path.join(__dirname, "../python/predict.py");
-
-    // Execute the Python script
-    const pythonProcess = exec(
-      `python ${pythonScriptPath}`,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error(`exec error: ${error}`);
-          return res.status(500).json({ error: "Error in prediction" });
-        }
-
-        try {
-          // Extract output and send message
-          const message = stdout;
-
-          // Extract the number from the message
-          const match = message.match(/\d+/);
-
-          if (match) {
-            const predictedLabel = parseInt(match[0], 10);
-            let classification;
-
-            // Classify based on the predicted label
-            if (predictedLabel === 0) {
-              classification = "This comment is classified as hate speech.";
-            } else if (predictedLabel === 1) {
-              classification =
-                "This comment is classified as offensive language.";
-            } else {
-              classification =
-                "This comment is classified as neither offensive nor non-offensive.";
-            }
-
-            res.json({ classification });
-          } else {
-            res
-              .status(500)
-              .json({ error: "No valid prediction found in the message." });
-          }
-        } catch (parseError) {
-          console.error(`parse error: ${parseError}`);
-          res.status(500).json({ error: "Error parsing prediction result" });
-        }
-      }
-    );
-
-    pythonProcess.stdin.write(JSON.stringify(comment));
-    pythonProcess.stdin.end();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
 
 module.exports = {
   loginUser,
@@ -211,6 +150,5 @@ module.exports = {
   logoutUser,
   testToken,
   googleauth,
-  getgoogleresponse,
-  predict,
+  getgoogleresponse
 };

@@ -35,7 +35,5 @@ router.get("/signup/google", googleauth);
 
 router.get("/auth/google/callback", getgoogleresponse);
 
-// prediction route
-router.post("/predict", predict);
 
 module.exports = router;

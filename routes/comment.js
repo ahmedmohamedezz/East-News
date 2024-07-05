@@ -6,6 +6,7 @@ const {
   addcomment,
   editcomment,
   deletecomment,
+  predict,
 } = require("../controllers/commentControler");
 
 //authorized features
@@ -13,6 +14,9 @@ const router = express.Router();
 router.use(requireAuth);
 
 router.get('/getcomment', getcomment);
+
+// prediction route
+router.post("/predict", predict);
 
 router.post('/addcomment', addcomment);
 
