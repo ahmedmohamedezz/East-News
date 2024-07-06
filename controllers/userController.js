@@ -82,21 +82,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// TODO : logout functinality
-const testToken = async (req, res) => {
-  const { token } = req.body;
-  console.log(token);
-  try {
-    const { _id } = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findOne({ _id });
-
-    res.status(200).json({ _id, user });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
 const logoutUser = (req, res) => {
   // const token = req.headers.authorization;
   const { token } = req.body;
@@ -106,49 +91,8 @@ const logoutUser = (req, res) => {
   res.status(200).json("Loggedout successfully");
 };
 
-//google auth
-
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:5000/user/auth/google/callback",
-      passReqToCallback: true,
-    },
-    function (request, accessToken, refreshToken, profile, done) {
-      done(null, profile);
-    }
-  )
-);
-
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
-
-const googleauth = (req, res) => {
-  passport.authenticate("google", { scope: ["email", "profile"] });
-  res.status(200).json("successfully");
-};
-
-const getgoogleresponse = (req, res) => {
-  passport.authenticate("google", { failureRedirect: "/login" }),
-    function (req, res) {
-      // Successful authentication, redirect home.
-      res.redirect("/");
-    };
-};
-
-
 module.exports = {
   loginUser,
   signupUser,
   logoutUser,
-  testToken,
-  googleauth,
-  getgoogleresponse
 };
