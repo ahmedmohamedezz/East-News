@@ -25,7 +25,7 @@ const predict = async (req, res) => {
     const comment = req.body.comment;
 
     if (!comment) {
-      return res.status(400).send("Comment is required");
+      return res.status(400).json({ message: "Comment is required" });
     }
 
     const pythonScriptPath = path.join(__dirname, "../python/predict.py");
@@ -95,9 +95,9 @@ const addcomment = async (req, res) => {
     const user = await User.findOne({ _id });
     const userName = user.userName;
     const authorID = _id;
-    const predictionResult = await predict({ comment: text })
-    if(predictionResult.classification == "This comment is classified as neither offensive nor hate.")
-    {
+    //const predictionResult = await predict({ comment: text })
+    //if(predictionResult.classification == "This comment is classified as neither offensive nor hate.")
+    //{
       
       const comment = await comments.create({
         text,
@@ -106,13 +106,13 @@ const addcomment = async (req, res) => {
         authorID,
         articleID,
       });
-        res.status(200).json({ comment });
+      res.status(200).json({ comment });
       
-    }
-    else
-    {
-      res.status(400).json(" this comment violated our policy!your comment cannot be added  ");
-    }
+    //}
+    //else
+    //{
+    //  res.status(400).json(" this comment violated our policy!your comment cannot be added  ");
+    //}
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -127,8 +127,8 @@ const editcomment = async (req, res) => {
     const { _id } = jwt.verify(token, process.env.JWT_SECRET);
     const comment = await comments.findOne({ _id: commentID });
     if (comment && comment.authorID.equals(new ObjectId(_id))) {
-      const predictionResult = await predict({ comment: text })
-      if(predictionResult.classification == "This comment is classified as neither offensive nor hate."){
+      //const predictionResult = await predict({ comment: text })
+      //if(predictionResult.classification == "This comment is classified as neither offensive nor hate."){
         
       const filter = { _id: new ObjectId(commentID) };
       const updateDoc = {
@@ -138,10 +138,10 @@ const editcomment = async (req, res) => {
       };
       const result = await comments.updateOne(filter, updateDoc);
       res.status(200).json({ result });
-      }
-      else{
-        res.status(400).json(" this comment violated our policy!your comment cannot be added  ");
-      }
+      //}
+      //else{
+        //res.status(400).json(" this comment violated our policy!your comment cannot be added  ");
+      //}
     } else {
       res.status(400).json("Can not edit");
     }
@@ -162,7 +162,7 @@ const deletecomment = async (req, res) => {
       const result = await comments.deleteOne(new ObjectId(commentID));
       res.status(200).json({ result });
     } else {
-      res.status(400).json("Can not edit");
+      res.status(400).json("Can not delete");
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
