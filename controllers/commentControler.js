@@ -174,4 +174,5 @@ module.exports = {
   addcomment,
   editcomment,
   deletecomment,
+  predict,
 };

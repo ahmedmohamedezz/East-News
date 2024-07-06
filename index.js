@@ -24,7 +24,6 @@ async function main() {
   // middleware
   app.use(express.json()); // to use request payload
 
-  app.use (express.static (path.join (__dirname, 'views')));
   
   // routers
   app.use("/news", newsRoutes);
@@ -32,22 +31,6 @@ async function main() {
   app.use("/comment", commentRoutes);
   app.use("/like", likeRoutes);
   app.use("/reader", readRoutes);
-
-  app.get('/', (req, res) => {
-    res.sendFile('login.html');
-  });
-
-  //auth session
-
-  app.use(session({
-    secret: 'mysecret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }
-  }));
-
-  app.use(passport.initialize());
-  app.use(passport.session());
 
   try {
     await mongoose.connect(process.env.MONGO_URI);
