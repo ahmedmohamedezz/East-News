@@ -90,7 +90,7 @@ const addcomment = async (req, res) => {
                 authorID,
                 articleID,
           });
-      res.status(200).json({ comment: 'Comment added successfully' });
+      res.status(200).json({ comment: 'Comment added successfully', data: comment });
     } else {
       res.status(400).json({ error: 'This comment violated our policy and cannot be added' });
     }
