@@ -11,12 +11,6 @@ const NLPCloudClient = require("nlpcloud");
 
 let SummarizerManager = require("node-summarizer").SummarizerManager;
 
-// const client = new NLPCloudClient({
-//   model: "bart-large-cnn",
-//   token: "9d15a79b99ad0ecafff7aafe0c34a1c28378180f",
-//   gpu: false,
-// });
-
 const getNews = async (req, res) => {
   // for filtering upon language, category, country
   const { country, category, language } = req.body;
@@ -90,20 +84,6 @@ const summarize = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-
-  // client
-  //   .summarization({
-  //     text: text,
-  //     size: "large",
-  //   })
-  //   .then(function (response) {
-  //     return res.status(200).json({ summary: response.data.summary_text });
-  //   })
-  //   .catch(function (err) {
-  //     return res
-  //       .status(500)
-  //       .json({ err: err.response.data.detail, status: err.response.status });
-  //   });
 };
 
 // check that data exists, and it's valid
