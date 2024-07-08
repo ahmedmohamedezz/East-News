@@ -88,7 +88,11 @@ const getNews = async (req, res) => {
       articles[i].likesCount = likesCount;
 
       articles[i].liked = false;
-      const articleLikedByCurrentUser = await Likes.findOne({ authorID: _id });
+      const articleLikedByCurrentUser = await Likes.findOne({
+        authorID: _id,
+        articleID: articles[i]._id,
+      });
+      // console.log(articleLikedByCurrentUser);
       if (articleLikedByCurrentUser) {
         articles[i].liked = true;
       }
