@@ -4,6 +4,8 @@ const Language = require("../models/languageModel");
 const Category = require("../models/categoryModel");
 const User = require("../models/userModel");
 const Saved = require("../models/savedModel");
+const Comments = require("../models/commentsModel");
+const Likes = require("../models/likeModel");
 
 const mongoose = require("mongoose");
 
@@ -63,6 +65,21 @@ const getNews = async (req, res) => {
 
     // make the request
     const articles = await Article.find(requestedAttrs);
+
+// Get the comments count & likes count of each article
+for (let i = 0; i < articles.length; i++) {
+  const commentsCount = await Comments.countDocuments({
+    articleID: articles[i]._id,
+  });
+
+  const likesCount = await Likes.countDocuments({
+    articleID: articles[i]._id,
+  });
+
+  articles[i] = articles[i].toObject(); // Convert Mongoose Document to plain JavaScript object
+  articles[i].commentsCount = commentsCount;
+  articles[i].likesCount = likesCount;
+}
 
     return res.status(200).json(articles);
   } catch (error) {
