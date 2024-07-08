@@ -6,6 +6,7 @@ const User = require("../models/userModel");
 const Saved = require("../models/savedModel");
 const Comments = require("../models/commentsModel");
 const Likes = require("../models/likeModel");
+const jwt = require("jsonwebtoken");
 
 const mongoose = require("mongoose");
 
@@ -66,20 +67,32 @@ const getNews = async (req, res) => {
     // make the request
     const articles = await Article.find(requestedAttrs);
 
-// Get the comments count & likes count of each article
-for (let i = 0; i < articles.length; i++) {
-  const commentsCount = await Comments.countDocuments({
-    articleID: articles[i]._id,
-  });
+    // get userId to know if the current user liked this artilce before or not
+    const { authorization } = req.headers;
+    // authorization should be 'Bearer token'
+    const token = authorization.split(" ")[1];
+    const { _id } = jwt.verify(token, process.env.JWT_SECRET); // userId
 
-  const likesCount = await Likes.countDocuments({
-    articleID: articles[i]._id,
-  });
+    // Get the comments count & likes count of each article
+    for (let i = 0; i < articles.length; i++) {
+      const commentsCount = await Comments.countDocuments({
+        articleID: articles[i]._id,
+      });
 
-  articles[i] = articles[i].toObject(); // Convert Mongoose Document to plain JavaScript object
-  articles[i].commentsCount = commentsCount;
-  articles[i].likesCount = likesCount;
-}
+      const likesCount = await Likes.countDocuments({
+        articleID: articles[i]._id,
+      });
+
+      articles[i] = articles[i].toObject(); // Convert Mongoose Document to plain JavaScript object
+      articles[i].commentsCount = commentsCount;
+      articles[i].likesCount = likesCount;
+
+      articles[i].liked = false;
+      const articleLikedByCurrentUser = await Likes.findOne({ authorID: _id });
+      if (articleLikedByCurrentUser) {
+        articles[i].liked = true;
+      }
+    }
 
     return res.status(200).json(articles);
   } catch (error) {
