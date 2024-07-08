@@ -4,8 +4,9 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { ObjectId } = require("mongodb");
 const { PythonShell } = require("python-shell");
-const path = require("path");
-const { exec } = require("child_process");
+const { exec } = require('child_process');
+const path = require('path');
+
 
 const getcomment = async (req, res) => {
   const { articleID } = req.body;
@@ -17,133 +18,115 @@ const getcomment = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
-
-
-const predict = async (req, res) => {
-  try {
-    const comment = req.body.comment;
-
-    if (!comment) {
-      return res.status(400).json({ message: "Comment is required" });
-    }
-
-    const pythonScriptPath = path.join(__dirname, "../python/predict.py");
-
-    // Execute the Python script
-    const pythonProcess = exec(
-      `python ${pythonScriptPath}`,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error(`exec error: ${error}`);
-          return res.status(500).json({ error: "Error in prediction" });
-        }
-
-        try {
-          // Extract output and send message
-          const message = stdout;
-
-          // Extract the number from the message
-          const match = message.match(/\d+/);
-
-          if (match) {
-            const predictedLabel = parseInt(match[0], 10);
-            let classification;
-
-            // Classify based on the predicted label
-            if (predictedLabel === 0) {
-              
-              classification = "This comment is classified as hate speech.";
-            } else if (predictedLabel === 1) {
-              classification =
-                "This comment is classified as offensive language.";
-            } else {
-              classification =
-                "This comment is classified as neither offensive nor hate.";
-            }
-
-            res.json({ classification });
-          } else {
-            res
-              .status(500)
-              .json({ error: "No valid prediction found in the message." });
-          }
-        } catch (parseError) {
-          console.error(`parse error: ${parseError}`);
-          res.status(500).json({ error: "Error parsing prediction result" });
-        }
+const predict = (comment) => {
+  return new Promise((resolve, reject) => {
+    const pythonScriptPath = path.join(__dirname, '../python/predict.py');
+    const pythonProcess = exec(`python ${pythonScriptPath}`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        reject('Error in prediction');
+        return;
       }
-    );
+
+      try {
+        const message = stdout;
+        const match = message.match(/\d+/);
+
+        if (match) {
+          const predictedLabel = parseInt(match[0], 10);
+          let classification;
+
+          if (predictedLabel === 0) {
+            classification = 'This comment is classified as hate speech.';
+          } else if (predictedLabel === 1) {
+            classification = 'This comment is classified as offensive language.';
+          } else {
+            classification = 'This comment is classified as neither offensive nor non-offensive.';
+          }
+
+          resolve({ classification });
+        } else {
+          reject('No valid prediction found in the message.');
+        }
+      } catch (parseError) {
+        console.error(`parse error: ${parseError}`);
+        reject('Error parsing prediction result');
+      }
+    });
 
     pythonProcess.stdin.write(JSON.stringify(comment));
     pythonProcess.stdin.end();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  });
 };
 
-
 const addcomment = async (req, res) => {
+
   const publishDate = new Date();
-  const { authorization } = req.headers;
-  // authorization should be 'Bearer token'
-  const token = authorization.split(" ")[1];
+ const { authorization } = req.headers;
+ const token = authorization.split(" ")[1];
   const { text, articleID } = req.body;
+
   try {
-    const { _id } = jwt.verify(token, process.env.JWT_SECRET);
+     const { _id } = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findOne({ _id });
     const userName = user.userName;
     const authorID = _id;
-    //const predictionResult = await predict({ comment: text })
-    //if(predictionResult.classification == "This comment is classified as neither offensive nor hate.")
-    //{
-      
-      const comment = await comments.create({
-        text,
-        publishDate,
-        userName,
-        authorID,
-        articleID,
-      });
-      res.status(200).json({ comment });
-      
-    //}
-    //else
-    //{
-    //  res.status(400).json(" this comment violated our policy!your comment cannot be added  ");
-    //}
+    if (!text) {
+      return res.status(400).json({ error: 'Comment text is required' });
+    }
+
+    // Call predict function to classify the comment
+    const predictionResult = await predict(text);
+
+    // Check classification and decide whether to proceed with adding comment
+    if (
+      predictionResult.classification ===
+      'This comment is classified as neither offensive nor non-offensive.'
+    ) {
+      const comment  = await comments.create({
+                text,
+                publishDate,
+                userName,
+                authorID,
+                articleID,
+          });
+      res.status(200).json({ comment: 'Comment added successfully', data: comment });
+    } else {
+      res.status(400).json({ error: 'This comment violated our policy and cannot be added' });
+    }
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
-
+ 
 const editcomment = async (req, res) => {
   const { authorization } = req.headers;
-  // authorization should be 'Bearer token'
   const token = authorization.split(" ")[1];
   const { text, commentID } = req.body;
+
   try {
     const { _id } = jwt.verify(token, process.env.JWT_SECRET);
     const comment = await comments.findOne({ _id: commentID });
+
     if (comment && comment.authorID.equals(new ObjectId(_id))) {
-      //const predictionResult = await predict({ comment: text })
-      //if(predictionResult.classification == "This comment is classified as neither offensive nor hate."){
-        
-      const filter = { _id: new ObjectId(commentID) };
-      const updateDoc = {
-        $set: {
-          text: text,
-        },
-      };
-      const result = await comments.updateOne(filter, updateDoc);
-      res.status(200).json({ result });
-      //}
-      //else{
-        //res.status(400).json(" this comment violated our policy!your comment cannot be added  ");
-      //}
+      // Call predict function and wait for the result
+      const predictionResult = await predict(text);
+
+      if (predictionResult.classification === "This comment is classified as neither offensive nor hate.") {
+        const filter = { _id: new ObjectId(commentID) };
+        const updateDoc = {
+          $set: {
+            text: text,
+          },
+        };
+        const result = await comments.updateOne(filter, updateDoc);
+        res.status(200).json({ result });
+      } else {
+        res.status(400).json({ error: "This comment violated our policy! Your comment cannot be updated." });
+      }
     } else {
-      res.status(400).json("Can not edit");
+      res.status(400).json({ error: "Cannot edit" });
     }
   } catch (error) {
     res.status(400).json({ error: error.message });

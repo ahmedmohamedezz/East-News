@@ -4,11 +4,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
 import sys
 import json
-import sklearn
-import numpy
 # Load the model and vectorizer
 model = joblib.load('MLData/model3.joblib')
 vectorizer = joblib.load('MLData/tfidf_vectorizer3.pkl')
+import sklearn
+import numpy
 
 # Retrieve scikit-learn version
 sklearn_version = sklearn.__version__
